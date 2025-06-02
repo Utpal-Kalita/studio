@@ -2,72 +2,65 @@
 // src/components/community/PostList.tsx
 "use client";
 
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firebase"; // Using mock db
 import { useEffect, useState } from "react";
 import PostCard from "./PostCard";
 import type { Post } from "./PostCard";
 import { Loader2, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { collection, query, where, orderBy, getDocs, type Timestamp } from "firebase/firestore";
+// Removed specific firestore imports like Timestamp, collection, query, where, orderBy, getDocs
 
 interface PostListProps {
   communityId: string;
-  initialPosts?: Post[];
+  initialPosts?: Post[]; // This can be used for optimistic updates from parent
 }
 
 export default function PostList({ communityId, initialPosts }: PostListProps) {
   const [posts, setPosts] = useState<Post[]>(initialPosts || []);
-  const [isLoading, setIsLoading] = useState(!initialPosts);
+  const [isLoading, setIsLoading] = useState(!initialPosts || initialPosts.length === 0);
 
   useEffect(() => {
+    // If initialPosts are provided (e.g., from parent after creating a new post), use them.
     if (initialPosts && initialPosts.length > 0) {
-      // Ensure dates are ISO strings if they might be Timestamps from initial props
-      const formattedInitialPosts = initialPosts.map(post => ({
+       const formattedInitialPosts = initialPosts.map(post => ({
         ...post,
-        createdAt: typeof post.createdAt === 'string' ? post.createdAt : (post.createdAt as unknown as Timestamp).toDate().toISOString(),
+        createdAt: typeof post.createdAt === 'string' ? post.createdAt : new Date(post.createdAt).toISOString(),
       })).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setPosts(formattedInitialPosts);
-      setIsLoading(false);
-      return;
+      setIsLoading(false); // Assuming if initialPosts are there, loading is done for them
+      return; // Don't fetch if initialPosts are provided and non-empty
     }
 
-    if (communityId && !initialPosts) { // Only fetch if no initialPosts
+    // Otherwise, fetch from mock db
+    if (communityId) {
       const fetchPosts = async () => {
         setIsLoading(true);
         try {
-          const postsCol = collection(db, "posts");
-          const q = query(postsCol, where("communityId", "==", communityId), orderBy("createdAt", "desc"));
-          const postsSnapshot = await getDocs(q);
+          // Using mock db's where, orderBy, and get
+          const postsQuery = db.collection("posts")
+            .where("communityId", "==", communityId)
+            .orderBy("createdAt", "desc"); // Mock orderBy logic will apply
+            
+          const postsSnapshot = await postsQuery.get();
           const communityPosts = postsSnapshot.docs.map(doc => {
             const data = doc.data();
             return {
               id: doc.id,
               ...data,
-              createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
+              // Ensure createdAt is a string for consistency with PostCard
+              createdAt: typeof data.createdAt === 'string' ? data.createdAt : new Date(data.createdAt).toISOString(),
             } as Post;
           });
-          setPosts(communityPosts);
+           setPosts(communityPosts.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
         } catch (error) {
           console.error("Error fetching posts:", error);
-          // Optionally set an error state to display to the user
         } finally {
           setIsLoading(false);
         }
       };
       fetchPosts();
     }
-  }, [communityId, initialPosts]);
-
-   useEffect(() => {
-    if (initialPosts) {
-      const formattedInitialPosts = initialPosts.map(post => ({
-        ...post,
-        createdAt: typeof post.createdAt === 'string' ? post.createdAt : (post.createdAt as unknown as Timestamp).toDate().toISOString(),
-      })).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      setPosts(formattedInitialPosts);
-    }
-  }, [initialPosts]);
-
+  }, [communityId, initialPosts]); // Re-run if communityId changes or initialPosts are updated
 
   if (isLoading) {
     return (
@@ -86,7 +79,7 @@ export default function PostList({ communityId, initialPosts }: PostListProps) {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">Be the first to share something in this community!</p>
-          <p className="text-sm text-muted-foreground mt-2">Ensure your Firestore 'posts' collection has entries for this community or that your security rules allow access.</p>
+          <p className="text-sm text-muted-foreground mt-2">Check the mock data in src/lib/firebase.ts if you expect posts.</p>
         </CardContent>
       </Card>
     );

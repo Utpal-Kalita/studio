@@ -16,7 +16,7 @@ import Image from "next/image";
 import { useParams } from 'next/navigation';
 import CreatePostForm from "@/components/community/CreatePostForm";
 import { useToast } from "@/hooks/use-toast";
-import { collection, doc, getDoc, getDocs, query, where, orderBy } from "firebase/firestore";
+// Removed specific firestore imports, using mock db methods
 
 const iconMap: { [key: string]: React.ElementType } = {
   ShieldAlert,
@@ -34,7 +34,7 @@ export default function IndividualCommunityPage() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]); // initialPosts will be handled by PostList for mock
   const { toast } = useToast();
 
   useEffect(() => {
@@ -42,9 +42,9 @@ export default function IndividualCommunityPage() {
       const fetchCommunityData = async () => {
         setIsLoading(true);
         try {
-          // Fetch community details
-          const communityDocRef = doc(db, "communities", communityId);
-          const communitySnap = await getDoc(communityDocRef);
+          // Fetch community details from mock
+          const communityDocRef = db.collection("communities").doc(communityId);
+          const communitySnap = await communityDocRef.get();
           if (communitySnap.exists()) {
             setCommunity({ id: communitySnap.id, ...communitySnap.data() } as Community);
           } else {
@@ -52,12 +52,13 @@ export default function IndividualCommunityPage() {
             toast({ title: "Not Found", description: "Community data could not be loaded.", variant: "destructive" });
           }
 
-          // Fetch initial posts for this community
-          const postsCol = collection(db, "posts");
-          const q = query(postsCol, where("communityId", "==", communityId), orderBy("createdAt", "desc"));
-          const postsSnapshot = await getDocs(q);
-          const communityPostsData = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
-          setPosts(communityPostsData);
+          // Fetch initial posts - PostList will also fetch, but this can prime it or be removed if PostList handles initial load fine
+          // For mock, PostList is self-sufficient, so this explicit post fetch can be simplified or removed
+          // const postsQuery = db.collection("posts").where("communityId", "==", communityId).orderBy("createdAt", "desc");
+          // const postsSnapshot = await postsQuery.get();
+          // const communityPostsData = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: new Date(doc.data().createdAt).toISOString() } as Post));
+          // setPosts(communityPostsData);
+
 
         } catch (error) {
           console.error("Error fetching community data:", error);
@@ -71,8 +72,10 @@ export default function IndividualCommunityPage() {
   }, [communityId, toast]);
 
   const handlePostCreated = (newPost: Post) => {
-    setPosts(prevPosts => [newPost, ...prevPosts].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    // This will add to the local state, PostList might refetch or also update if prop changes
+     setPosts(prevPosts => [newPost, ...prevPosts].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
   };
+
 
   if (isLoading && !community) {
     return (
@@ -148,14 +151,10 @@ export default function IndividualCommunityPage() {
               <Edit3 className="mr-2 h-4 w-4" /> Create New Post
             </Button>
           </section>
-
-          {isLoading && posts.length === 0 ? (
-             <div className="flex justify-center items-center py-10">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-             </div>
-          ): (
-             <PostList communityId={communityId} initialPosts={posts} />
-          )}
+          
+          {/* PostList will handle its own loading and fetching from mock based on communityId */}
+          {/* Pass the locally managed posts if you want optimistic updates from CreatePostForm */}
+          <PostList communityId={communityId} initialPosts={posts} />
         </div>
         <CreatePostForm 
           isOpen={isCreatePostOpen} 

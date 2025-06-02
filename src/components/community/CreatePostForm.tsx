@@ -15,8 +15,8 @@ import { Loader2, PlusCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import type { Post } from './PostCard';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase'; // Using mock db
+// No serverTimestamp from firestore needed for mock
 
 const postSchema = z.object({
   title: z.string().min(5, { message: "Title must be at least 5 characters." }).max(100, { message: "Title must be 100 characters or less." }),
@@ -48,28 +48,27 @@ export default function CreatePostForm({ isOpen, onOpenChange, communityId, onPo
     }
     setIsSubmitting(true);
 
-    const postCreationTime = new Date(); // Use a consistent client-side time for optimistic update
+    const postCreationTime = new Date(); 
 
-    const newPostDataForFirestore = {
+    const newPostDataForMock = {
       communityId,
       userId: user.uid,
       userName: user.displayName || "Anonymous User",
       userAvatar: user.photoURL || `https://placehold.co/40x40.png?text=${(user.displayName || "A").charAt(0)}`,
       title: data.title,
       content: data.content,
-      createdAt: postCreationTime, // Will be converted to Firestore Timestamp by SDK
+      createdAt: postCreationTime.toISOString(), // Store as ISO string for mock
       reactions: 0,
       commentsCount: 0,
     };
 
     try {
-      const postsCol = collection(db, 'posts');
-      const docRef = await addDoc(postsCol, newPostDataForFirestore);
+      // Using mock db's addDoc
+      const docRef = await db.collection('posts').addDoc(newPostDataForMock);
       
       const createdPostForUI: Post = {
-        ...newPostDataForFirestore,
-        id: docRef.id,
-        createdAt: postCreationTime.toISOString(), // For UI consistency
+        ...newPostDataForMock,
+        id: docRef.id, // id from mock addDoc response
       };
       
       onPostCreated(createdPostForUI);
@@ -86,7 +85,7 @@ export default function CreatePostForm({ isOpen, onOpenChange, communityId, onPo
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) reset(); // Reset form when dialog is closed
+      if (!open) reset(); 
       onOpenChange(open);
     }}>
       <DialogContent className="sm:max-w-[525px]">

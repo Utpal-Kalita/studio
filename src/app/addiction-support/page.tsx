@@ -13,7 +13,7 @@ import { Loader2, LifeBuoy, Users, BookOpen, Edit3, ShieldAlert } from "lucide-r
 import type { Resource } from "@/components/resources/ResourceCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { collection, getDocs, query, where } from "firebase/firestore";
+// Removed firestore imports, db is now mock
 
 const ADDICTION_COMMUNITY_ID = "addiction"; 
 
@@ -25,11 +25,8 @@ export default function AddictionSupportPage() {
     const fetchAddictionResources = async () => {
       setIsLoadingResources(true);
       try {
-        const resourcesCol = collection(db, 'resources');
-        // To fetch all resources and then filter client-side (if topics are not direct fields for querying)
-        // Or, if 'topic' is an array field, use 'array-contains-any' if your rules/data structure supports it.
-        // For simplicity with varied topic keywords, fetching all and filtering:
-        const resourcesSnapshot = await getDocs(resourcesCol);
+        // Using mock db
+        const resourcesSnapshot = await db.collection('resources').get();
         const allResources = resourcesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Resource));
         
         const addictionRelatedTopics = ['addiction', 'detox', 'recovery', 'substance use']; 

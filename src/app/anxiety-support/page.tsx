@@ -13,7 +13,7 @@ import { Loader2, ShieldAlert as PageIcon, Users, BookOpen, Edit3, ShieldAlert }
 import type { Resource } from "@/components/resources/ResourceCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { collection, getDocs, query, where } from "firebase/firestore";
+// Removed firestore imports, db is now mock
 
 const ANXIETY_COMMUNITY_ID = "anxiety";
 
@@ -25,8 +25,8 @@ export default function AnxietySupportPage() {
     const fetchAnxietyResources = async () => {
       setIsLoadingResources(true);
       try {
-        const resourcesCol = collection(db, 'resources');
-        const resourcesSnapshot = await getDocs(resourcesCol);
+        // Using mock db
+        const resourcesSnapshot = await db.collection('resources').get();
         const allResources = resourcesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Resource);
         
         const anxietyRelatedTopics = ['anxiety', 'stress', 'panic', 'worry'];

@@ -13,7 +13,7 @@ import { Loader2, Sunrise, Users, BookOpen, Edit3, ShieldAlert } from "lucide-re
 import type { Resource } from "@/components/resources/ResourceCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { collection, getDocs, query, where } from "firebase/firestore";
+// Removed firestore imports, db is now mock
 
 const SELF_GROWTH_COMMUNITY_ID = "self-growth";
 
@@ -25,8 +25,8 @@ export default function SelfGrowthSupportPage() {
     const fetchSelfGrowthResources = async () => {
       setIsLoadingResources(true);
       try {
-        const resourcesCol = collection(db, 'resources');
-        const resourcesSnapshot = await getDocs(resourcesCol);
+        // Using mock db
+        const resourcesSnapshot = await db.collection('resources').get();
         const allResources = resourcesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Resource);
 
         const selfGrowthRelatedTopics = ['self-growth', 'mindfulness', 'motivation', 'personal development', 'well-being', 'habits'];

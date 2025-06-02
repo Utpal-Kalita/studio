@@ -12,7 +12,7 @@ import type { Community } from "@/components/community/CommunityCard";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Image from "next/image";
-import { collection, getDocs } from "firebase/firestore";
+// Removed firestore import, using mock db
 
 export default function CommunityPage() {
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -23,8 +23,8 @@ export default function CommunityPage() {
     const fetchCommunities = async () => {
       setIsLoading(true);
       try {
-        const communitiesCol = collection(db, 'communities');
-        const communitySnapshot = await getDocs(communitiesCol);
+        // Using mock db
+        const communitySnapshot = await db.collection('communities').get();
         const fetchedCommunities = communitySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community));
         setCommunities(fetchedCommunities);
       } catch (error) {
@@ -82,7 +82,7 @@ export default function CommunityPage() {
           ) : (
             <div className="text-center py-10">
               <p className="text-muted-foreground text-lg">No communities found matching your search.</p>
-               <p className="text-sm text-muted-foreground">Ensure your Firestore 'communities' collection is populated.</p>
+               <p className="text-sm text-muted-foreground">Check the mock data in src/lib/firebase.ts if you expect to see communities.</p>
             </div>
           )}
         </div>

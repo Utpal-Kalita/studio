@@ -11,8 +11,7 @@ import { useEffect, useState } from "react";
 import { Loader2, BookOpen } from "lucide-react";
 import type { Resource } from "@/components/resources/ResourceCard";
 import Image from "next/image";
-import { collection, getDocs, query, where } from "firebase/firestore";
-
+// Removed firestore imports, db is now mock
 
 export default function ResourcesPage() {
   const [resources, setResources] = useState<Resource[]>([]);
@@ -23,8 +22,8 @@ export default function ResourcesPage() {
     const fetchResources = async () => {
       setIsLoading(true);
       try {
-        const resourcesCol = collection(db, 'resources');
-        const resourceSnapshot = await getDocs(resourcesCol);
+        // Using mock db
+        const resourceSnapshot = await db.collection('resources').get();
         const fetchedResources = resourceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Resource));
         setResources(fetchedResources);
       } catch (error) {
@@ -88,7 +87,7 @@ export default function ResourcesPage() {
               <BookOpen className="mx-auto h-16 w-16 text-muted-foreground mb-4 opacity-50" />
               <p className="text-xl font-semibold text-foreground">No Resources Found</p>
               <p className="text-muted-foreground mt-2">
-                We couldn&apos;t find any resources matching your current filters. Try adjusting your search or check if resources are populated in Firestore.
+                We couldn&apos;t find any resources matching your current filters. Try adjusting your search or check the mock data.
               </p>
             </div>
           )}
