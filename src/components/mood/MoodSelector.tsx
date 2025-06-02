@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Smile, Meh, Frown, Laugh, Angry, Tired } from "lucide-react"; // Example icons
+import { Smile, Meh, Frown, Laugh, Angry, AlertCircle } from "lucide-react"; // Example icons
 import type React from "react";
 
 interface MoodOption {
@@ -16,7 +16,7 @@ const moodOptions: MoodOption[] = [
   { name: "Okay", icon: Smile, colorClasses: "bg-green-400/20 text-green-600 border-green-500 hover:bg-green-500/30" },
   { name: "Meh", icon: Meh, colorClasses: "bg-blue-400/20 text-blue-600 border-blue-500 hover:bg-blue-500/30" },
   { name: "Sad", icon: Frown, colorClasses: "bg-indigo-400/20 text-indigo-600 border-indigo-500 hover:bg-indigo-500/30" },
-  { name: "Anxious", icon: Tired, colorClasses: "bg-purple-400/20 text-purple-600 border-purple-500 hover:bg-purple-500/30"},
+  { name: "Anxious", icon: AlertCircle, colorClasses: "bg-purple-400/20 text-purple-600 border-purple-500 hover:bg-purple-500/30"},
   { name: "Angry", icon: Angry, colorClasses: "bg-red-400/20 text-red-600 border-red-500 hover:bg-red-500/30" },
 ];
 

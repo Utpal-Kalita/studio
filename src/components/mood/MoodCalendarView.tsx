@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from 'date-fns';
-import { Smile, Meh, Frown, Laugh, Angry, Tired, Info } from "lucide-react"; // Example icons
+import { Smile, Meh, Frown, Laugh, Angry, AlertCircle, Info } from "lucide-react"; // Example icons
 
 export interface MoodEntry {
   id: string;
@@ -24,7 +24,7 @@ const moodVisuals: { [key: string]: { icon: React.ElementType; color: string } }
   "Okay": { icon: Smile, color: "text-green-500" },
   "Meh": { icon: Meh, color: "text-blue-500" },
   "Sad": { icon: Frown, color: "text-indigo-500" },
-  "Anxious": { icon: Tired, color: "text-purple-500" },
+  "Anxious": { icon: AlertCircle, color: "text-purple-500" },
   "Angry": { icon: Angry, color: "text-red-500" },
   "Default": { icon: Info, color: "text-muted-foreground" }
 };
