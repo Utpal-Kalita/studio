@@ -1,3 +1,4 @@
+
 // src/app/community/[id]/page.tsx
 "use client";
 
@@ -10,8 +11,11 @@ import { useEffect, useState } from "react";
 import { Loader2, MessageSquare, Edit3, ArrowLeft, Users, ShieldAlert, CloudRain, HeartHandshake, Sunrise } from "lucide-react";
 import Link from "next/link";
 import type { Community } from "@/components/community/CommunityCard"; 
+import type { Post } from "@/components/community/PostCard";
 import Image from "next/image";
 import { useParams } from 'next/navigation';
+import CreatePostForm from "@/components/community/CreatePostForm"; // Added import
+import { useToast } from "@/hooks/use-toast"; // Added import
 
 const iconMap: { [key: string]: React.ElementType } = {
   ShieldAlert,
@@ -28,27 +32,44 @@ export default function IndividualCommunityPage() {
   const communityId = params.id as string;
   const [community, setCommunity] = useState<Community | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false); // Added state for dialog
+  const [posts, setPosts] = useState<Post[]>([]); // Added state for posts to allow local update
+  const { toast } = useToast();
+
+
   useEffect(() => {
     if (communityId) {
-      const fetchCommunityDetails = async () => {
+      const fetchCommunityData = async () => {
         setIsLoading(true);
         try {
+          // Fetch community details
           const allCommunities = (await db.collection('communities').where().get()).docs.map((doc: any) => ({ id: doc.id, ...doc.data()}) as Community);
           const foundCommunity = allCommunities.find(c => c.id === communityId);
           setCommunity(foundCommunity || null);
 
+          // Fetch initial posts
+          const allPostsData = (await db.collection('posts').where().get()).docs.map((doc:any) => ({id: doc.id, ...doc.data()}) as Post);
+          const communityPostsData = allPostsData.filter(post => post.communityId === communityId)
+                                        .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setPosts(communityPostsData);
+
         } catch (error) {
-          console.error("Error fetching community details:", error);
+          console.error("Error fetching community data:", error);
+          toast({ title: "Error", description: "Could not load community data.", variant: "destructive" });
         } finally {
           setIsLoading(false);
         }
       };
-      fetchCommunityDetails();
+      fetchCommunityData();
     }
-  }, [communityId]);
+  }, [communityId, toast]);
 
-  if (isLoading) {
+  const handlePostCreated = (newPost: Post) => {
+    setPosts(prevPosts => [newPost, ...prevPosts].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+  };
+
+
+  if (isLoading && !community) { // Show loader only if community data is not yet available
     return (
       <AuthGuard>
         <AppShell>
@@ -118,13 +139,25 @@ export default function IndividualCommunityPage() {
               className="w-full h-40 object-cover rounded-md mb-6"
               data-ai-hint={getImageHint()}
             />
-            <Button className="w-full sm:w-auto">
-              <Edit3 className="mr-2 h-4 w-4" /> Create New Post (Coming Soon)
+            <Button className="w-full sm:w-auto" onClick={() => setIsCreatePostOpen(true)}>
+              <Edit3 className="mr-2 h-4 w-4" /> Create New Post
             </Button>
           </section>
 
-          <PostList communityId={communityId} />
+          {isLoading && posts.length === 0 ? ( // Show post list loader only if posts are still loading
+             <div className="flex justify-center items-center py-10">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+             </div>
+          ): (
+             <PostList communityId={communityId} initialPosts={posts} />
+          )}
         </div>
+        <CreatePostForm 
+          isOpen={isCreatePostOpen} 
+          onOpenChange={setIsCreatePostOpen} 
+          communityId={communityId} 
+          onPostCreated={handlePostCreated} 
+        />
       </AppShell>
     </AuthGuard>
   );

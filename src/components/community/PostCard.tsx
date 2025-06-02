@@ -1,3 +1,4 @@
+
 // src/components/community/PostCard.tsx
 "use client";
 
@@ -17,6 +18,7 @@ export interface Post {
   content: string;
   createdAt: string; // ISO string date
   reactions: number;
+  commentsCount: number; // Added comments count
   // comments: Comment[]; // Future feature
 }
 
@@ -53,11 +55,11 @@ export default function PostCard({ post }: PostCardProps) {
       </CardContent>
       <CardFooter className="flex justify-between items-center pt-4 border-t">
         <div className="flex gap-4">
-          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary" disabled>
             <ThumbsUp className="mr-2 h-4 w-4" /> {post.reactions} Likes (Soon)
           </Button>
-          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-            <MessageSquareText className="mr-2 h-4 w-4" /> Comments (Soon)
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary" disabled>
+            <MessageSquareText className="mr-2 h-4 w-4" /> {post.commentsCount} Comments (Soon)
           </Button>
         </div>
         {/* <Button variant="link" size="sm" className="text-primary">Read More</Button> */}

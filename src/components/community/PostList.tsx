@@ -1,3 +1,4 @@
+
 // src/components/community/PostList.tsx
 "use client";
 
@@ -10,36 +11,48 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface PostListProps {
   communityId: string;
+  initialPosts?: Post[]; // Optional prop for pre-loaded posts
 }
 
-export default function PostList({ communityId }: PostListProps) {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function PostList({ communityId, initialPosts }: PostListProps) {
+  const [posts, setPosts] = useState<Post[]>(initialPosts || []);
+  const [isLoading, setIsLoading] = useState(!initialPosts); // Only load if initialPosts are not provided
 
   useEffect(() => {
+    // If initialPosts are provided, we might not need to fetch again,
+    // or we can fetch to update/sync. For now, if initialPosts exist, we skip fetching.
+    if (initialPosts && initialPosts.length > 0) {
+      setPosts(initialPosts);
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch posts only if initialPosts are not provided or empty
     if (communityId) {
       const fetchPosts = async () => {
         setIsLoading(true);
         try {
-          // In a real app, this would be a Firestore query with where('communityId', '==', communityId)
-          // const querySnapshot = await db.collection('posts').where('communityId', '==', communityId).orderBy('createdAt', 'desc').get();
-          // const fetchedPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
-          
-          // Mock implementation:
           const allPosts = (await db.collection('posts').where().get()).docs.map((doc:any) => ({id: doc.id, ...doc.data()}) as Post);
           const communityPosts = allPosts.filter(post => post.communityId === communityId)
                                         .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           setPosts(communityPosts);
         } catch (error) {
           console.error("Error fetching posts:", error);
-          // Handle error
         } finally {
           setIsLoading(false);
         }
       };
       fetchPosts();
     }
-  }, [communityId]);
+  }, [communityId, initialPosts]); // Re-run if communityId or initialPosts change
+
+  // Update posts if initialPosts prop changes from parent (e.g., after creating a new post)
+   useEffect(() => {
+    if (initialPosts) {
+      setPosts(initialPosts.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    }
+  }, [initialPosts]);
+
 
   if (isLoading) {
     return (
