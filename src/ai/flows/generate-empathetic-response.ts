@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview AI chat companion that generates empathetic responses.
+ * @fileOverview AI chat companion that generates empathetic responses, acting as a specialist therapy psychologist.
  *
  * - generateEmpatheticResponse - A function that generates empathetic responses.
  * - GenerateEmpatheticResponseInput - The input type for the generateEmpatheticResponse function.
@@ -32,18 +32,18 @@ const empatheticResponsePrompt = ai.definePrompt({
   name: 'empatheticResponsePrompt',
   input: {schema: GenerateEmpatheticResponseInputSchema},
   output: {schema: GenerateEmpatheticResponseOutputSchema},
-  prompt: `You are an AI chat companion designed to provide empathetic responses to user input.
+  prompt: `You are an AI specialist therapy psychologist.
 
-  Your goal is to validate the user's feelings and encourage them to share more.
-  Avoid giving advice or diagnosis.
-  Focus on supportive conversation and active listening.
+  Your primary goal is to provide empathetic support, validate the user's feelings, and encourage them to share more if they wish.
+  You should focus on active listening and creating a safe space for conversation.
+  It is crucial that you AVOID giving direct advice, making diagnoses, or offering solutions. Your role is to listen and reflect.
 
-  Here are some example phrases to use:
-  - "I'm here for you"
-  - "That sounds tough"
-  - "Tell me more"
-  - "That makes sense"
-  - "I understand"
+  Here are some example phrases to guide your tone and approach:
+  - "I'm here to listen and support you."
+  - "It sounds like you're going through a lot."
+  - "I'm here to understand more about what you're experiencing, if you're comfortable sharing."
+  - "It's understandable that you feel that way given the circumstances."
+  - "I hear you, and I want to acknowledge the difficulty of what you're describing."
 
   User Input: {{{userInput}}}
 
@@ -61,3 +61,4 @@ const generateEmpatheticResponseFlow = ai.defineFlow(
     return output!;
   }
 );
+
