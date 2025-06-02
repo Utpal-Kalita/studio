@@ -5,17 +5,13 @@ import AuthGuard from "@/components/auth/AuthGuard";
 import AppShell from "@/components/layout/AppShell";
 import PostList from "@/components/community/PostList";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { db } from "@/lib/firebase"; 
 import { useEffect, useState } from "react";
 import { Loader2, MessageSquare, Edit3, ArrowLeft, Users, ShieldAlert, CloudRain, HeartHandshake, Sunrise } from "lucide-react";
 import Link from "next/link";
 import type { Community } from "@/components/community/CommunityCard"; 
 import Image from "next/image";
-
-interface CommunityPageProps {
-  params: { id: string };
-}
+import { useParams } from 'next/navigation';
 
 const iconMap: { [key: string]: React.ElementType } = {
   ShieldAlert,
@@ -27,8 +23,9 @@ const iconMap: { [key: string]: React.ElementType } = {
   Default: MessageSquare,
 };
 
-export default function IndividualCommunityPage({ params }: CommunityPageProps) {
-  const { id: communityId } = params;
+export default function IndividualCommunityPage() {
+  const params = useParams();
+  const communityId = params.id as string;
   const [community, setCommunity] = useState<Community | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -114,7 +111,7 @@ export default function IndividualCommunityPage({ params }: CommunityPageProps) 
                 </div>
             </div>
             <Image 
-              src={`https://placehold.co/1200x200.png`}
+              src="https://placehold.co/1200x200.png"
               alt={`${community.name} banner`}
               width={1200}
               height={200}
