@@ -3,17 +3,16 @@
 
 import AuthGuard from "@/components/auth/AuthGuard";
 import AppShell from "@/components/layout/AppShell";
-import PostList from "@/components/community/PostList"; // Re-use for specific community
-import ResourceCard from "@/components/resources/ResourceCard"; // Re-use for specific resources
+import PostList from "@/components/community/PostList"; 
+import ResourceCard from "@/components/resources/ResourceCard";
 import { Button } from "@/components/ui/button";
-import { db } from "@/lib/firebase"; // Mock
+import { db } from "@/lib/firebase"; 
 import { useEffect, useState } from "react";
-import { Loader2, LifeBuoy, Users, BookOpen, Edit3 } from "lucide-react";
+import { Loader2, LifeBuoy, Users, BookOpen, Edit3, ShieldAlert } from "lucide-react";
 import type { Resource } from "@/components/resources/ResourceCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 
-// Assume 'addiction' is the ID for the addiction support community
 const ADDICTION_COMMUNITY_ID = "addiction"; 
 
 export default function AddictionSupportPage() {
@@ -24,13 +23,8 @@ export default function AddictionSupportPage() {
     const fetchAddictionResources = async () => {
       setIsLoadingResources(true);
       try {
-        // In a real app, query resources tagged with 'addiction' or similar
-        // const querySnapshot = await db.collection('resources').where('topic', 'in', ['Addiction', 'Detox', 'Recovery']).get();
-        // const fetchedResources = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Resource));
-        
-        // Mock implementation:
         const allResources = (await db.collection('resources').where().get()).docs.map((doc:any) => ({id: doc.id, ...doc.data()}) as Resource);
-        const addictionRelatedTopics = ['addiction', 'detox', 'recovery', 'substance use']; // Case-insensitive check
+        const addictionRelatedTopics = ['addiction', 'detox', 'recovery', 'substance use']; 
         const fetchedResources = allResources.filter(res => 
             addictionRelatedTopics.some(topic => res.topic.toLowerCase().includes(topic))
         );
@@ -63,14 +57,13 @@ export default function AddictionSupportPage() {
             </div>
           </section>
 
-          {/* Community Section */}
           <Card className="shadow-lg">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <Users className="h-7 w-7 text-primary" />
-                <CardTitle className="font-headline text-2xl">Support Community</CardTitle>
+                <CardTitle className="font-headline text-2xl">Recovery Community Posts</CardTitle>
               </div>
-              <CardDescription>Share your experiences, find encouragement, and connect with others on similar paths in our Addiction Recovery community.</CardDescription>
+              <CardDescription>Share your experiences, find encouragement, and connect with others in our Addiction Recovery community.</CardDescription>
             </CardHeader>
             <CardContent>
                <Button className="w-full sm:w-auto mb-6">
@@ -80,12 +73,11 @@ export default function AddictionSupportPage() {
             </CardContent>
           </Card>
 
-          {/* Resources Section */}
           <Card className="shadow-lg">
             <CardHeader>
                 <div className="flex items-center gap-3">
                     <BookOpen className="h-7 w-7 text-primary" />
-                    <CardTitle className="font-headline text-2xl">Helpful Resources</CardTitle>
+                    <CardTitle className="font-headline text-2xl">Recovery Resources</CardTitle>
                 </div>
               <CardDescription>Curated articles, exercises, and tools to aid in your recovery and detox process.</CardDescription>
             </CardHeader>
@@ -105,9 +97,10 @@ export default function AddictionSupportPage() {
               )}
             </CardContent>
           </Card>
+
            <Card className="border-destructive/50 bg-destructive/5 text-destructive-foreground shadow-lg">
             <CardHeader>
-              <CardTitle className="text-destructive flex items-center gap-2"><ShieldAlert />Important Note</CardTitle>
+              <CardTitle className="text-destructive flex items-center gap-2"><ShieldAlert className="h-5 w-5"/>Important Note</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm">

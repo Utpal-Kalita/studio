@@ -6,36 +6,37 @@ import AppShell from "@/components/layout/AppShell";
 import PostList from "@/components/community/PostList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { db } from "@/lib/firebase"; // Mock
+import { db } from "@/lib/firebase"; 
 import { useEffect, useState } from "react";
-import { Loader2, MessageSquare, Edit3, ArrowLeft } from "lucide-react";
+import { Loader2, MessageSquare, Edit3, ArrowLeft, Users, ShieldAlert, CloudRain, HeartHandshake, Sunrise } from "lucide-react";
 import Link from "next/link";
-import type { Community } from "@/components/community/CommunityCard"; // Re-use type if suitable
+import type { Community } from "@/components/community/CommunityCard"; 
 import Image from "next/image";
 
 interface CommunityPageProps {
   params: { id: string };
 }
 
+const iconMap: { [key: string]: React.ElementType } = {
+  ShieldAlert,
+  CloudRain,
+  HeartHandshake,
+  Sunrise,
+  Users,
+  MessageSquare,
+  Default: MessageSquare,
+};
+
 export default function IndividualCommunityPage({ params }: CommunityPageProps) {
   const { id: communityId } = params;
   const [community, setCommunity] = useState<Community | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  // Add state for new post content if implementing inline form
-  // const [newPostContent, setNewPostContent] = useState("");
-
+  
   useEffect(() => {
     if (communityId) {
       const fetchCommunityDetails = async () => {
         setIsLoading(true);
         try {
-          // In a real app, fetch community details and posts
-          // const communityDoc = await db.collection('communities').doc(communityId).get();
-          // if (communityDoc.exists) {
-          //   setCommunity({ id: communityDoc.id, ...communityDoc.data() } as Community);
-          // } else {
-          //   // Handle community not found
-          // }
           const allCommunities = (await db.collection('communities').where().get()).docs.map((doc: any) => ({ id: doc.id, ...doc.data()}) as Community);
           const foundCommunity = allCommunities.find(c => c.id === communityId);
           setCommunity(foundCommunity || null);
@@ -78,7 +79,7 @@ export default function IndividualCommunityPage({ params }: CommunityPageProps) 
     );
   }
   
-  const IconComponent = community.icon && (await import('lucide-react'))[community.icon as keyof typeof import('lucide-react')] ? (await import('lucide-react'))[community.icon as keyof typeof import('lucide-react')] : MessageSquare;
+  const IconComponent = community.icon && iconMap[community.icon] ? iconMap[community.icon] : iconMap.Default;
 
 
   return (
@@ -97,7 +98,7 @@ export default function IndividualCommunityPage({ params }: CommunityPageProps) 
           <section className="bg-card p-6 sm:p-8 rounded-xl shadow-lg">
              <div className="flex items-start sm:items-center gap-4 mb-4 flex-col sm:flex-row">
                 <div className="p-3 rounded-lg bg-primary/10 text-primary shrink-0">
-                    {community.icon && <IconComponent size={32} />}
+                    {IconComponent && <IconComponent size={32} />}
                 </div>
                 <div>
                     <h1 className="font-headline text-2xl sm:text-3xl font-semibold text-foreground">{community.name}</h1>
@@ -110,9 +111,8 @@ export default function IndividualCommunityPage({ params }: CommunityPageProps) 
               width={1200}
               height={200}
               className="w-full h-40 object-cover rounded-md mb-6"
-              data-ai-hint={`${community.name.toLowerCase().replace(' ','')} group banner`}
+              data-ai-hint={`${community.name.toLowerCase().replace(/\s+/g, '-')} group banner`}
             />
-            {/* Placeholder for "Create Post" Button or Inline Form */}
             <Button className="w-full sm:w-auto">
               <Edit3 className="mr-2 h-4 w-4" /> Create New Post (Coming Soon)
             </Button>
