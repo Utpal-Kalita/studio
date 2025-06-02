@@ -41,6 +41,7 @@ export default function ChatInterface() {
   
   const [speechRecognitionSupported, setSpeechRecognitionSupported] = useState(false);
   const [speechSynthesisSupported, setSpeechSynthesisSupported] = useState(false);
+  const [preferredVoice, setPreferredVoice] = useState<SpeechSynthesisVoice | null>(null);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -49,6 +50,35 @@ export default function ChatInterface() {
     setSpeechRecognitionSupported(!!(window.SpeechRecognition || window.webkitSpeechRecognition));
     setSpeechSynthesisSupported(!!(window.SpeechSynthesisUtterance && window.speechSynthesis));
   }, []);
+
+  useEffect(() => {
+    if (!speechSynthesisSupported || !window.speechSynthesis) return;
+
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        // Try to find a more natural English voice
+        // Priority: "Neural", "Google", specific high-quality names, then any "en-US"
+        let bestVoice = 
+          voices.find(voice => voice.lang === 'en-US' && voice.name.includes('Neural')) ||
+          voices.find(voice => voice.lang === 'en-US' && voice.name.includes('Google')) ||
+          voices.find(voice => voice.lang === 'en-US' && voice.default) || // Prefer default US voice
+          voices.find(voice => voice.lang === 'en-US') ||
+          voices.find(voice => voice.lang.startsWith('en-')) || // Any English voice
+          voices[0]; // Fallback to the first available voice
+        setPreferredVoice(bestVoice);
+      }
+    };
+
+    loadVoices(); // Initial attempt
+    // Voices might load asynchronously, so listen for the voiceschanged event
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null; // Cleanup
+    };
+  }, [speechSynthesisSupported]);
+
 
   const getInitials = (name?: string | null) => {
     if (!name) return 'U';
@@ -72,17 +102,23 @@ export default function ChatInterface() {
   const speakText = useCallback((text: string) => {
     if (!speechSynthesisSupported || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
     try {
+      // Cancel any ongoing speech before starting a new one
+      window.speechSynthesis.cancel();
+      
       const utterance = new window.SpeechSynthesisUtterance(text);
-      // You could add options here like:
-      // utterance.voice = window.speechSynthesis.getVoices()[0]; // Select a voice
-      // utterance.pitch = 1;
-      // utterance.rate = 1;
+      utterance.lang = 'en-US'; // Explicitly set language
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
+      // You can adjust rate and pitch if desired, e.g.:
+      // utterance.rate = 0.9; // Slightly slower
+      // utterance.pitch = 1.0;
       window.speechSynthesis.speak(utterance);
     } catch (error) {
       console.error("Speech synthesis error:", error);
       toast({ title: "Speech Error", description: "Could not speak the response.", variant: "destructive"});
     }
-  }, [speechSynthesisSupported, toast]);
+  }, [speechSynthesisSupported, toast, preferredVoice]);
 
   const processAndSendMessage = async (text: string) => {
     if (text.trim() === '' || isLoading) return;
@@ -139,10 +175,16 @@ export default function ChatInterface() {
 
     if (isListening) {
       recognitionRef.current?.stop();
+      setIsLoading(false); // Ensure loading state is reset
       setIsListening(false);
     } else {
+      // Cancel any TTS before starting STT
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+
       const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognitionAPI) { // Should be caught by speechRecognitionSupported but as a safeguard
+      if (!SpeechRecognitionAPI) { 
          toast({ title: "Error", description: "Speech recognition API not found.", variant: "destructive"});
          return;
       }
@@ -153,13 +195,14 @@ export default function ChatInterface() {
 
       recognitionRef.current.onstart = () => {
         setIsListening(true);
+        setInputValue("Listening..."); // Provide visual feedback
         toast({ title: "Listening...", description: "Speak now.", duration: 3000});
       };
 
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
-        setInputValue(transcript); // Show transcript in input field
-        processAndSendMessage(transcript); // Send transcript to AI
+        setInputValue(transcript); 
+        processAndSendMessage(transcript); 
       };
 
       recognitionRef.current.onerror = (event) => {
@@ -171,12 +214,22 @@ export default function ChatInterface() {
             errorMessage = "No microphone was found. Ensure that a microphone is installed and that microphone access is allowed.";
         } else if (event.error === 'not-allowed') {
             errorMessage = "Microphone access was denied. Please allow access in your browser settings.";
+        } else if (event.error === 'network') {
+            errorMessage = "A network error occurred during speech recognition.";
         }
         toast({ title: "Recognition Error", description: errorMessage, variant: "destructive"});
+        setInputValue(''); // Clear "Listening..."
+        setIsLoading(false);
         setIsListening(false);
       };
 
       recognitionRef.current.onend = () => {
+        // Check if onend was called due to an error or natural end
+        // If inputValue is still "Listening...", it might be an unexpected end or error not caught by onerror
+        if (inputValue === "Listening...") {
+            setInputValue('');
+        }
+        setIsLoading(false);
         setIsListening(false);
       };
 
@@ -185,6 +238,8 @@ export default function ChatInterface() {
       } catch (error) {
         console.error("Failed to start recognition:", error);
         toast({ title: "Recognition Error", description: "Could not start voice recognition.", variant: "destructive"});
+        setInputValue('');
+        setIsLoading(false);
         setIsListening(false);
       }
     }
@@ -233,7 +288,7 @@ export default function ChatInterface() {
               )}
             </div>
           ))}
-          {isLoading && messages[messages.length -1]?.sender === 'user' && ( // Show loader only if user sent the last message and we are waiting for AI
+          {isLoading && messages[messages.length -1]?.sender === 'user' && ( 
             <div className="flex items-end gap-3 justify-start">
               <Avatar className="h-8 w-8 self-start">
                 <AvatarImage src={aiAvatar} data-ai-hint="robot avatar"/>
@@ -264,12 +319,12 @@ export default function ChatInterface() {
             aria-label="Chat message input"
           />
           {speechRecognitionSupported && (
-            <Button type="button" size="icon" onClick={toggleListening} disabled={isLoading && !isListening} variant={isListening ? "destructive" : "outline"} aria-label={isListening ? "Stop listening" : "Start listening"}>
+            <Button type="button" size="icon" onClick={toggleListening} disabled={isLoading && !isListening && inputValue.trim() !== ""} variant={isListening ? "destructive" : "outline"} aria-label={isListening ? "Stop listening" : "Start listening"}>
               {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </Button>
           )}
-          <Button type="submit" size="icon" disabled={isLoading || inputValue.trim() === ''} aria-label="Send message">
-            {isLoading && !isListening ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+          <Button type="submit" size="icon" disabled={isLoading || inputValue.trim() === '' || isListening} aria-label="Send message">
+            {(isLoading && !isListening) ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           </Button>
         </form>
         {!speechRecognitionSupported && (
@@ -282,3 +337,4 @@ export default function ChatInterface() {
     </div>
   );
 }
+
