@@ -57,22 +57,29 @@ export default function ChatInterface() {
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
       if (voices.length > 0) {
-        // Try to find a more natural English voice
-        // Priority: "Neural", "Google", specific high-quality names, then any "en-US"
-        let bestVoice = 
-          voices.find(voice => voice.lang === 'en-US' && voice.name.includes('Neural')) ||
-          voices.find(voice => voice.lang === 'en-US' && voice.name.includes('Google')) ||
-          voices.find(voice => voice.lang === 'en-US' && voice.default) || // Prefer default US voice
+        // Attempt to find a "soft female voice"
+        // 1. Prefer default en-US voice if available
+        // 2. Look for en-US voices with "female" in the name (case-insensitive)
+        // 3. Fallback to any en-US voice
+        // 4. Fallback to any English voice
+        // 5. Fallback to the first available voice
+        let chosenVoice =
+          voices.find(voice => voice.lang === 'en-US' && voice.default) ||
+          voices.find(voice => voice.lang === 'en-US' && voice.name.toLowerCase().includes('female')) ||
           voices.find(voice => voice.lang === 'en-US') ||
-          voices.find(voice => voice.lang.startsWith('en-')) || // Any English voice
-          voices[0]; // Fallback to the first available voice
-        setPreferredVoice(bestVoice);
+          voices.find(voice => voice.lang.startsWith('en-')) ||
+          voices[0];
+        setPreferredVoice(chosenVoice);
       }
     };
 
-    loadVoices(); // Initial attempt
-    // Voices might load asynchronously, so listen for the voiceschanged event
-    window.speechSynthesis.onvoiceschanged = loadVoices;
+    // Voices might load asynchronously
+    // Check if voices are already loaded, otherwise wait for the event
+    if (window.speechSynthesis.getVoices().length > 0) {
+      loadVoices();
+    } else {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
 
     return () => {
       window.speechSynthesis.onvoiceschanged = null; // Cleanup
@@ -112,7 +119,7 @@ export default function ChatInterface() {
       }
       // You can adjust rate and pitch if desired, e.g.:
       // utterance.rate = 0.9; // Slightly slower
-      // utterance.pitch = 1.0;
+      // utterance.pitch = 1.1; // Slightly higher pitch might sound "softer" to some
       window.speechSynthesis.speak(utterance);
     } catch (error) {
       console.error("Speech synthesis error:", error);
