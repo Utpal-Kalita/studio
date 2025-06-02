@@ -1,3 +1,4 @@
+
 // This is a mock Firebase setup for development without actual Firebase.
 // Replace with your actual Firebase configuration.
 
@@ -116,8 +117,52 @@ const mockDb: {
     { id: 'self-growth', name: 'Self-Growth Journey', description: 'Cultivating personal development.', icon: 'Sunrise' },
   ],
   posts: [
-    { id: 'post1', communityId: 'anxiety', userId: 'test-uid', userName: 'Test User', title: 'Feeling overwhelmed today', content: 'Just wanted to share that I\'m feeling a bit overwhelmed with work and life. Anyone else relate?', createdAt: new Date().toISOString(), reactions: 5, comments: [] },
-    { id: 'post2', communityId: 'anxiety', userId: 'another-user', userName: 'Jane Doe', title: 'Coping mechanisms', content: 'What are some coping mechanisms you find helpful for anxiety attacks?', createdAt: new Date().toISOString(), reactions: 12, comments: [] },
+    { id: 'post1', communityId: 'anxiety', userId: 'test-uid', userName: 'Test User', title: 'Feeling overwhelmed today', content: 'Just wanted to share that I\'m feeling a bit overwhelmed with work and life. Anyone else relate?', createdAt: new Date().toISOString(), reactions: 5 },
+    { id: 'post2', communityId: 'anxiety', userId: 'another-user', userName: 'Jane Doe', title: 'Coping mechanisms', content: 'What are some coping mechanisms you find helpful for anxiety attacks?', createdAt: new Date().toISOString(), reactions: 12 },
+    { 
+      id: 'demo-post-addiction', 
+      communityId: 'addiction', 
+      userId: 'wellverse-admin', 
+      userName: 'WellVerse Admin', 
+      userAvatar: 'https://placehold.co/40x40.png', 
+      title: 'Welcome to the Addiction Recovery Space!', 
+      content: 'This is a safe space to share your journey, find support, and connect with others on the path to recovery. Remember, you\'re not alone. Feel free to introduce yourself or share what\'s on your mind.', 
+      createdAt: new Date().toISOString(), 
+      reactions: 3 
+    },
+    { 
+      id: 'demo-post-anxiety-welcome', 
+      communityId: 'anxiety', 
+      userId: 'wellverse-admin', 
+      userName: 'WellVerse Admin', 
+      userAvatar: 'https://placehold.co/40x40.png', 
+      title: 'Welcome to the Anxiety & Stress Support Group!', 
+      content: 'Hello everyone! This community is here to provide a supportive environment for anyone dealing with anxiety or stress. Share your experiences, ask questions, and find comfort in knowing you\'re not alone. Let\'s support each other.', 
+      createdAt: new Date().toISOString(), 
+      reactions: 5
+    },
+    { 
+      id: 'demo-post-depression', 
+      communityId: 'depression', 
+      userId: 'wellverse-admin', 
+      userName: 'WellVerse Admin', 
+      userAvatar: 'https://placehold.co/40x40.png', 
+      title: 'A Gentle Welcome to Our Depression Support Community', 
+      content: 'If you\'re navigating depression or low mood, please know this is a space for understanding and shared experiences. You are welcome here. Feel free to share as much or as little as you\'re comfortable with. We\'re here to listen.', 
+      createdAt: new Date().toISOString(), 
+      reactions: 4
+    },
+    { 
+      id: 'demo-post-self-growth', 
+      communityId: 'self-growth', 
+      userId: 'wellverse-admin', 
+      userName: 'WellVerse Admin', 
+      userAvatar: 'https://placehold.co/40x40.png', 
+      title: 'Embark on Your Self-Growth Journey With Us!', 
+      content: 'Welcome to the Self-Growth & Development community! This is a place to explore personal development, share insights, set goals, and support each other in becoming our best selves. What are you working on today?', 
+      createdAt: new Date().toISOString(), 
+      reactions: 6
+    }
   ],
   resources: [
     { id: 'res1', title: 'Deep Breathing Exercise', type: 'Exercise', topic: 'Stress', description: 'A guided exercise for quick stress relief.', contentUrl: '#', icon: 'Wind' },
@@ -136,3 +181,4 @@ export class GoogleAuthProvider {};
 
 // Helper to simulate a delay
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
