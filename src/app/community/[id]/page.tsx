@@ -14,8 +14,9 @@ import type { Community } from "@/components/community/CommunityCard";
 import type { Post } from "@/components/community/PostCard";
 import Image from "next/image";
 import { useParams } from 'next/navigation';
-import CreatePostForm from "@/components/community/CreatePostForm"; // Added import
-import { useToast } from "@/hooks/use-toast"; // Added import
+import CreatePostForm from "@/components/community/CreatePostForm";
+import { useToast } from "@/hooks/use-toast";
+import { collection, doc, getDoc, getDocs, query, where, orderBy } from "firebase/firestore";
 
 const iconMap: { [key: string]: React.ElementType } = {
   ShieldAlert,
@@ -32,10 +33,9 @@ export default function IndividualCommunityPage() {
   const communityId = params.id as string;
   const [community, setCommunity] = useState<Community | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false); // Added state for dialog
-  const [posts, setPosts] = useState<Post[]>([]); // Added state for posts to allow local update
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([]);
   const { toast } = useToast();
-
 
   useEffect(() => {
     if (communityId) {
@@ -43,14 +43,20 @@ export default function IndividualCommunityPage() {
         setIsLoading(true);
         try {
           // Fetch community details
-          const allCommunities = (await db.collection('communities').where().get()).docs.map((doc: any) => ({ id: doc.id, ...doc.data()}) as Community);
-          const foundCommunity = allCommunities.find(c => c.id === communityId);
-          setCommunity(foundCommunity || null);
+          const communityDocRef = doc(db, "communities", communityId);
+          const communitySnap = await getDoc(communityDocRef);
+          if (communitySnap.exists()) {
+            setCommunity({ id: communitySnap.id, ...communitySnap.data() } as Community);
+          } else {
+            setCommunity(null);
+            toast({ title: "Not Found", description: "Community data could not be loaded.", variant: "destructive" });
+          }
 
-          // Fetch initial posts
-          const allPostsData = (await db.collection('posts').where().get()).docs.map((doc:any) => ({id: doc.id, ...doc.data()}) as Post);
-          const communityPostsData = allPostsData.filter(post => post.communityId === communityId)
-                                        .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          // Fetch initial posts for this community
+          const postsCol = collection(db, "posts");
+          const q = query(postsCol, where("communityId", "==", communityId), orderBy("createdAt", "desc"));
+          const postsSnapshot = await getDocs(q);
+          const communityPostsData = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
           setPosts(communityPostsData);
 
         } catch (error) {
@@ -68,8 +74,7 @@ export default function IndividualCommunityPage() {
     setPosts(prevPosts => [newPost, ...prevPosts].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
   };
 
-
-  if (isLoading && !community) { // Show loader only if community data is not yet available
+  if (isLoading && !community) {
     return (
       <AuthGuard>
         <AppShell>
@@ -144,7 +149,7 @@ export default function IndividualCommunityPage() {
             </Button>
           </section>
 
-          {isLoading && posts.length === 0 ? ( // Show post list loader only if posts are still loading
+          {isLoading && posts.length === 0 ? (
              <div className="flex justify-center items-center py-10">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
              </div>

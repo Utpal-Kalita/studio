@@ -1,3 +1,4 @@
+
 // src/app/resources/page.tsx
 "use client";
 
@@ -5,11 +6,13 @@ import AuthGuard from "@/components/auth/AuthGuard";
 import AppShell from "@/components/layout/AppShell";
 import ResourceCard from "@/components/resources/ResourceCard";
 import ResourceFilter, { type FilterState } from "@/components/resources/ResourceFilter";
-import { db } from "@/lib/firebase"; // Mock
+import { db } from "@/lib/firebase"; 
 import { useEffect, useState } from "react";
 import { Loader2, BookOpen } from "lucide-react";
 import type { Resource } from "@/components/resources/ResourceCard";
 import Image from "next/image";
+import { collection, getDocs, query, where } from "firebase/firestore";
+
 
 export default function ResourcesPage() {
   const [resources, setResources] = useState<Resource[]>([]);
@@ -20,14 +23,12 @@ export default function ResourcesPage() {
     const fetchResources = async () => {
       setIsLoading(true);
       try {
-        // In a real app, this would be a Firestore query
-        // const querySnapshot = await db.collection('resources').get();
-        // const fetchedResources = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Resource));
-        const fetchedResources = (await db.collection('resources').where().get()).docs.map((doc: any) => ({ id: doc.id, ...doc.data()}) as Resource);
+        const resourcesCol = collection(db, 'resources');
+        const resourceSnapshot = await getDocs(resourcesCol);
+        const fetchedResources = resourceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Resource));
         setResources(fetchedResources);
       } catch (error) {
         console.error("Error fetching resources:", error);
-        // Handle error
       } finally {
         setIsLoading(false);
       }
@@ -35,12 +36,13 @@ export default function ResourcesPage() {
     fetchResources();
   }, []);
 
-  const topics = ["all", ...new Set(resources.map(r => r.topic))];
-  const types = ["all", ...new Set(resources.map(r => r.type))];
+  const topics = ["all", ...new Set(resources.map(r => r.topic).filter(Boolean))];
+  const types = ["all", ...new Set(resources.map(r => r.type).filter(Boolean))];
+
 
   const filteredResources = resources.filter(resource => {
     const searchMatch = resource.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                        resource.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
+                        (resource.description && resource.description.toLowerCase().includes(filters.searchTerm.toLowerCase()));
     const topicMatch = filters.topic === "all" || resource.topic === filters.topic;
     const typeMatch = filters.type === "all" || resource.type === filters.type;
     return searchMatch && topicMatch && typeMatch;
@@ -86,7 +88,7 @@ export default function ResourcesPage() {
               <BookOpen className="mx-auto h-16 w-16 text-muted-foreground mb-4 opacity-50" />
               <p className="text-xl font-semibold text-foreground">No Resources Found</p>
               <p className="text-muted-foreground mt-2">
-                We couldn&apos;t find any resources matching your current filters. Try adjusting your search.
+                We couldn&apos;t find any resources matching your current filters. Try adjusting your search or check if resources are populated in Firestore.
               </p>
             </div>
           )}

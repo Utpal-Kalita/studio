@@ -1,3 +1,4 @@
+
 // src/app/anxiety-support/page.tsx
 "use client";
 
@@ -12,6 +13,7 @@ import { Loader2, ShieldAlert as PageIcon, Users, BookOpen, Edit3, ShieldAlert }
 import type { Resource } from "@/components/resources/ResourceCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 const ANXIETY_COMMUNITY_ID = "anxiety";
 
@@ -23,10 +25,13 @@ export default function AnxietySupportPage() {
     const fetchAnxietyResources = async () => {
       setIsLoadingResources(true);
       try {
-        const allResources = (await db.collection('resources').where().get()).docs.map((doc: any) => ({ id: doc.id, ...doc.data() }) as Resource);
+        const resourcesCol = collection(db, 'resources');
+        const resourcesSnapshot = await getDocs(resourcesCol);
+        const allResources = resourcesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Resource);
+        
         const anxietyRelatedTopics = ['anxiety', 'stress', 'panic', 'worry'];
         const fetchedResources = allResources.filter(res =>
-          anxietyRelatedTopics.some(topic => res.topic.toLowerCase().includes(topic))
+          res.topic && anxietyRelatedTopics.some(topic => res.topic.toLowerCase().includes(topic))
         );
         setResources(fetchedResources);
       } catch (error) {

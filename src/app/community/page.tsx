@@ -1,16 +1,18 @@
+
 // src/app/community/page.tsx
 "use client";
 
 import AuthGuard from "@/components/auth/AuthGuard";
 import AppShell from "@/components/layout/AppShell";
 import CommunityCard from "@/components/community/CommunityCard";
-import { db } from "@/lib/firebase"; // Mock
+import { db } from "@/lib/firebase"; 
 import { useEffect, useState } from "react";
 import { Loader2, Users } from "lucide-react";
 import type { Community } from "@/components/community/CommunityCard";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Image from "next/image";
+import { collection, getDocs } from "firebase/firestore";
 
 export default function CommunityPage() {
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -21,14 +23,12 @@ export default function CommunityPage() {
     const fetchCommunities = async () => {
       setIsLoading(true);
       try {
-        // In a real app, this would be a Firestore query
-        // const querySnapshot = await db.collection('communities').get();
-        // const fetchedCommunities = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community));
-        const fetchedCommunities = (await db.collection('communities').where().get()).docs.map((doc: any) => ({ id: doc.id, ...doc.data()}) as Community);
+        const communitiesCol = collection(db, 'communities');
+        const communitySnapshot = await getDocs(communitiesCol);
+        const fetchedCommunities = communitySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Community));
         setCommunities(fetchedCommunities);
       } catch (error) {
         console.error("Error fetching communities:", error);
-        // Handle error (e.g., show toast)
       } finally {
         setIsLoading(false);
       }
@@ -72,7 +72,7 @@ export default function CommunityPage() {
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
             </div>
           ) : filteredCommunities.length > 0 ? (
-            <ScrollArea className="h-auto"> {/* Adjust height as needed or remove for full scroll */}
+            <ScrollArea className="h-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredCommunities.map((community) => (
                   <CommunityCard key={community.id} community={community} />
@@ -82,6 +82,7 @@ export default function CommunityPage() {
           ) : (
             <div className="text-center py-10">
               <p className="text-muted-foreground text-lg">No communities found matching your search.</p>
+               <p className="text-sm text-muted-foreground">Ensure your Firestore 'communities' collection is populated.</p>
             </div>
           )}
         </div>

@@ -1,3 +1,4 @@
+
 // src/app/self-growth-support/page.tsx
 "use client";
 
@@ -12,6 +13,7 @@ import { Loader2, Sunrise, Users, BookOpen, Edit3, ShieldAlert } from "lucide-re
 import type { Resource } from "@/components/resources/ResourceCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 const SELF_GROWTH_COMMUNITY_ID = "self-growth";
 
@@ -23,10 +25,13 @@ export default function SelfGrowthSupportPage() {
     const fetchSelfGrowthResources = async () => {
       setIsLoadingResources(true);
       try {
-        const allResources = (await db.collection('resources').where().get()).docs.map((doc: any) => ({ id: doc.id, ...doc.data() }) as Resource);
+        const resourcesCol = collection(db, 'resources');
+        const resourcesSnapshot = await getDocs(resourcesCol);
+        const allResources = resourcesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Resource);
+
         const selfGrowthRelatedTopics = ['self-growth', 'mindfulness', 'motivation', 'personal development', 'well-being', 'habits'];
         const fetchedResources = allResources.filter(res =>
-          selfGrowthRelatedTopics.some(topic => res.topic.toLowerCase().includes(topic))
+          res.topic && selfGrowthRelatedTopics.some(topic => res.topic.toLowerCase().includes(topic))
         );
         setResources(fetchedResources);
       } catch (error) {

@@ -2,54 +2,69 @@
 // src/components/community/PostList.tsx
 "use client";
 
-import { db } from "@/lib/firebase"; // Mock
+import { db } from "@/lib/firebase";
 import { useEffect, useState } from "react";
 import PostCard from "./PostCard";
 import type { Post } from "./PostCard";
 import { Loader2, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { collection, query, where, orderBy, getDocs, type Timestamp } from "firebase/firestore";
 
 interface PostListProps {
   communityId: string;
-  initialPosts?: Post[]; // Optional prop for pre-loaded posts
+  initialPosts?: Post[];
 }
 
 export default function PostList({ communityId, initialPosts }: PostListProps) {
   const [posts, setPosts] = useState<Post[]>(initialPosts || []);
-  const [isLoading, setIsLoading] = useState(!initialPosts); // Only load if initialPosts are not provided
+  const [isLoading, setIsLoading] = useState(!initialPosts);
 
   useEffect(() => {
-    // If initialPosts are provided, we might not need to fetch again,
-    // or we can fetch to update/sync. For now, if initialPosts exist, we skip fetching.
     if (initialPosts && initialPosts.length > 0) {
-      setPosts(initialPosts);
+      // Ensure dates are ISO strings if they might be Timestamps from initial props
+      const formattedInitialPosts = initialPosts.map(post => ({
+        ...post,
+        createdAt: typeof post.createdAt === 'string' ? post.createdAt : (post.createdAt as unknown as Timestamp).toDate().toISOString(),
+      })).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setPosts(formattedInitialPosts);
       setIsLoading(false);
       return;
     }
 
-    // Fetch posts only if initialPosts are not provided or empty
-    if (communityId) {
+    if (communityId && !initialPosts) { // Only fetch if no initialPosts
       const fetchPosts = async () => {
         setIsLoading(true);
         try {
-          const allPosts = (await db.collection('posts').where().get()).docs.map((doc:any) => ({id: doc.id, ...doc.data()}) as Post);
-          const communityPosts = allPosts.filter(post => post.communityId === communityId)
-                                        .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          const postsCol = collection(db, "posts");
+          const q = query(postsCol, where("communityId", "==", communityId), orderBy("createdAt", "desc"));
+          const postsSnapshot = await getDocs(q);
+          const communityPosts = postsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
+            } as Post;
+          });
           setPosts(communityPosts);
         } catch (error) {
           console.error("Error fetching posts:", error);
+          // Optionally set an error state to display to the user
         } finally {
           setIsLoading(false);
         }
       };
       fetchPosts();
     }
-  }, [communityId, initialPosts]); // Re-run if communityId or initialPosts change
+  }, [communityId, initialPosts]);
 
-  // Update posts if initialPosts prop changes from parent (e.g., after creating a new post)
    useEffect(() => {
     if (initialPosts) {
-      setPosts(initialPosts.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      const formattedInitialPosts = initialPosts.map(post => ({
+        ...post,
+        createdAt: typeof post.createdAt === 'string' ? post.createdAt : (post.createdAt as unknown as Timestamp).toDate().toISOString(),
+      })).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setPosts(formattedInitialPosts);
     }
   }, [initialPosts]);
 
@@ -71,6 +86,7 @@ export default function PostList({ communityId, initialPosts }: PostListProps) {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">Be the first to share something in this community!</p>
+          <p className="text-sm text-muted-foreground mt-2">Ensure your Firestore 'posts' collection has entries for this community or that your security rules allow access.</p>
         </CardContent>
       </Card>
     );

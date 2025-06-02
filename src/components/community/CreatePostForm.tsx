@@ -14,7 +14,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Loader2, PlusCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import type { Post } from './PostCard'; // Assuming Post type is exported
+import type { Post } from './PostCard';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const postSchema = z.object({
   title: z.string().min(5, { message: "Title must be at least 5 characters." }).max(100, { message: "Title must be 100 characters or less." }),
@@ -46,33 +48,31 @@ export default function CreatePostForm({ isOpen, onOpenChange, communityId, onPo
     }
     setIsSubmitting(true);
 
-    const newPostData = {
+    const postCreationTime = new Date(); // Use a consistent client-side time for optimistic update
+
+    const newPostDataForFirestore = {
       communityId,
       userId: user.uid,
       userName: user.displayName || "Anonymous User",
-      userAvatar: user.photoURL || undefined,
+      userAvatar: user.photoURL || `https://placehold.co/40x40.png?text=${(user.displayName || "A").charAt(0)}`,
       title: data.title,
       content: data.content,
-      // id, createdAt, reactions, commentsCount will be handled by the mock DB or backend
+      createdAt: postCreationTime, // Will be converted to Firestore Timestamp by SDK
+      reactions: 0,
+      commentsCount: 0,
     };
 
     try {
-      // In a real app, this would be an API call. db.collection('posts').add is from our mock.
-      // The mock firebase.ts needs to handle generating id, createdAt, etc.
-      const { db } = await import('@/lib/firebase'); // Dynamically import to ensure client-side only
-      const docRef = await db.collection('posts').add(newPostData);
-
-      // Construct the full post object as expected by onPostCreated
-      // The mock 'add' should ideally return the full post or at least the ID and timestamp
-      const createdPost: Post = {
-        ...newPostData,
-        id: docRef.id, // Assuming mock add returns an id
-        createdAt: new Date().toISOString(), // Mocking createdAt
-        reactions: 0,
-        commentsCount: 0,
+      const postsCol = collection(db, 'posts');
+      const docRef = await addDoc(postsCol, newPostDataForFirestore);
+      
+      const createdPostForUI: Post = {
+        ...newPostDataForFirestore,
+        id: docRef.id,
+        createdAt: postCreationTime.toISOString(), // For UI consistency
       };
       
-      onPostCreated(createdPost);
+      onPostCreated(createdPostForUI);
       toast({ title: "Post Created!", description: "Your post has been successfully shared." });
       reset();
       onOpenChange(false);
@@ -85,7 +85,10 @@ export default function CreatePostForm({ isOpen, onOpenChange, communityId, onPo
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) reset(); // Reset form when dialog is closed
+      onOpenChange(open);
+    }}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle className="flex items-center">
@@ -122,7 +125,7 @@ export default function CreatePostForm({ isOpen, onOpenChange, communityId, onPo
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline" onClick={() => reset()}>
+              <Button type="button" variant="outline">
                 Cancel
               </Button>
             </DialogClose>
