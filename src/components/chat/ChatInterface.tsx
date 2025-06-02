@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Loader2, User, Bot, Mic, MicOff, Volume2 } from 'lucide-react';
+import { Send, Loader2, User, Bot, Mic, MicOff } from 'lucide-react';
 import { generateEmpatheticResponse } from '@/ai/flows/generate-empathetic-response';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
@@ -57,15 +57,9 @@ export default function ChatInterface() {
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
       if (voices.length > 0) {
-        // Attempt to find a "soft female voice"
-        // 1. Prefer default en-US voice if available
-        // 2. Look for en-US voices with "female" in the name (case-insensitive)
-        // 3. Fallback to any en-US voice
-        // 4. Fallback to any English voice
-        // 5. Fallback to the first available voice
         let chosenVoice =
-          voices.find(voice => voice.lang === 'en-US' && voice.default) ||
           voices.find(voice => voice.lang === 'en-US' && voice.name.toLowerCase().includes('female')) ||
+          voices.find(voice => voice.lang === 'en-US' && voice.default) ||
           voices.find(voice => voice.lang === 'en-US') ||
           voices.find(voice => voice.lang.startsWith('en-')) ||
           voices[0];
@@ -73,8 +67,6 @@ export default function ChatInterface() {
       }
     };
 
-    // Voices might load asynchronously
-    // Check if voices are already loaded, otherwise wait for the event
     if (window.speechSynthesis.getVoices().length > 0) {
       loadVoices();
     } else {
@@ -82,7 +74,9 @@ export default function ChatInterface() {
     }
 
     return () => {
-      window.speechSynthesis.onvoiceschanged = null; // Cleanup
+      if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
     };
   }, [speechSynthesisSupported]);
 
@@ -109,17 +103,13 @@ export default function ChatInterface() {
   const speakText = useCallback((text: string) => {
     if (!speechSynthesisSupported || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
     try {
-      // Cancel any ongoing speech before starting a new one
       window.speechSynthesis.cancel();
       
       const utterance = new window.SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US'; // Explicitly set language
+      utterance.lang = 'en-US';
       if (preferredVoice) {
         utterance.voice = preferredVoice;
       }
-      // You can adjust rate and pitch if desired, e.g.:
-      // utterance.rate = 0.9; // Slightly slower
-      // utterance.pitch = 1.1; // Slightly higher pitch might sound "softer" to some
       window.speechSynthesis.speak(utterance);
     } catch (error) {
       console.error("Speech synthesis error:", error);
@@ -138,7 +128,7 @@ export default function ChatInterface() {
       initials: userInitials,
     };
     setMessages(prev => [...prev, newUserMessage]);
-    if (inputValue === text) setInputValue(''); // Clear input field only if it was typed
+    if (inputValue === text) setInputValue('');
     setIsLoading(true);
 
     try {
@@ -182,10 +172,9 @@ export default function ChatInterface() {
 
     if (isListening) {
       recognitionRef.current?.stop();
-      setIsLoading(false); // Ensure loading state is reset
+      setIsLoading(false);
       setIsListening(false);
     } else {
-      // Cancel any TTS before starting STT
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
@@ -202,7 +191,7 @@ export default function ChatInterface() {
 
       recognitionRef.current.onstart = () => {
         setIsListening(true);
-        setInputValue("Listening..."); // Provide visual feedback
+        setInputValue("Listening..."); 
         toast({ title: "Listening...", description: "Speak now.", duration: 3000});
       };
 
@@ -225,14 +214,12 @@ export default function ChatInterface() {
             errorMessage = "A network error occurred during speech recognition.";
         }
         toast({ title: "Recognition Error", description: errorMessage, variant: "destructive"});
-        setInputValue(''); // Clear "Listening..."
+        setInputValue(''); 
         setIsLoading(false);
         setIsListening(false);
       };
 
       recognitionRef.current.onend = () => {
-        // Check if onend was called due to an error or natural end
-        // If inputValue is still "Listening...", it might be an unexpected end or error not caught by onerror
         if (inputValue === "Listening...") {
             setInputValue('');
         }
@@ -253,7 +240,6 @@ export default function ChatInterface() {
   };
 
   useEffect(() => {
-    // Cleanup speech recognition instance if component unmounts
     return () => {
       recognitionRef.current?.abort();
       if (window.speechSynthesis) {
