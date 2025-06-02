@@ -25,7 +25,7 @@ export default function ChatPage() {
             </CardHeader>
             <CardContent className="flex-1 p-0 flex flex-col">
                <div className="p-4 text-center bg-secondary/30 border-b">
-                  <Image src="https://placehold.co/150x150.png" alt="Friendly AI avatar" width={80} height={80} className="mx-auto rounded-full mb-2 shadow-md" data-ai-hint="friendly robot avatar" />
+                  <Image src="https://placehold.co/150x150.png" alt="Friendly AI avatar" width={80} height={80} className="mx-auto rounded-full mb-2 shadow-md" data-ai-hint="friendly robot" />
                   <p className="text-sm text-muted-foreground">
                     This is a supportive chat space. The AI is here to listen, not to give medical advice.
                   </p>

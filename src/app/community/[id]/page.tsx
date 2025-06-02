@@ -80,7 +80,15 @@ export default function IndividualCommunityPage({ params }: CommunityPageProps) 
   }
   
   const IconComponent = community.icon && iconMap[community.icon] ? iconMap[community.icon] : iconMap.Default;
-
+  
+  const getImageHint = () => {
+    if (community.icon && iconMap[community.icon]) {
+      const iconName = community.icon.toLowerCase().replace(/([A-Z])/g, ' $1').trim().split(' ')[0];
+      return `${iconName} banner`;
+    }
+    const communityNamePart = community.name.toLowerCase().split('&')[0].trim().split(' ')[0];
+    return `${communityNamePart} banner`;
+  }
 
   return (
     <AuthGuard>
@@ -111,7 +119,7 @@ export default function IndividualCommunityPage({ params }: CommunityPageProps) 
               width={1200}
               height={200}
               className="w-full h-40 object-cover rounded-md mb-6"
-              data-ai-hint={`${community.name.toLowerCase().replace(/\s+/g, '-')} group banner`}
+              data-ai-hint={getImageHint()}
             />
             <Button className="w-full sm:w-auto">
               <Edit3 className="mr-2 h-4 w-4" /> Create New Post (Coming Soon)

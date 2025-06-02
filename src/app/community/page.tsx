@@ -47,7 +47,7 @@ export default function CommunityPage() {
         <div className="space-y-8">
           <section className="relative bg-card p-6 sm:p-10 rounded-xl shadow-lg overflow-hidden">
             <div className="absolute inset-0 opacity-10">
-                <Image src="https://placehold.co/1200x300.png?text=+" data-ai-hint="community abstract" alt="Abstract background" layout="fill" objectFit="cover" />
+                <Image src="https://placehold.co/1200x300.png" data-ai-hint="community connection" alt="Abstract background" layout="fill" objectFit="cover" />
             </div>
             <div className="relative z-10">
                 <div className="flex items-center mb-4">

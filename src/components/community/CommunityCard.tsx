@@ -34,6 +34,18 @@ const iconMap: { [key: string]: React.ElementType } = {
 export default function CommunityCard({ community }: CommunityCardProps) {
   const IconComponent = community.icon && iconMap[community.icon] ? iconMap[community.icon] : iconMap.Default;
 
+  const getImageHint = () => {
+    let hintPart = community.name.toLowerCase().split('&')[0].trim().split(' ')[0]; // Default to first word of name
+    if (community.icon && iconMap[community.icon]) {
+      hintPart = community.icon.toLowerCase().replace(/([A-Z])/g, '$1').trim().split(' ')[0];
+      if (hintPart === "shieldalert") hintPart = "shield";
+      if (hintPart === "cloudrain") hintPart = "cloud";
+      if (hintPart === "heartHandshake") hintPart = "heart";
+      if (hintPart === "messagesquare") hintPart = "message";
+    }
+    return `${hintPart} abstract`;
+  }
+
   return (
     <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card/80 backdrop-blur-sm">
       <CardHeader className="pb-2">
@@ -49,7 +61,7 @@ export default function CommunityCard({ community }: CommunityCardProps) {
             width={400}
             height={150}
             className="w-full h-32 object-cover rounded-md"
-            data-ai-hint={`${community.name.toLowerCase().replace(' ', '')} abstract`}
+            data-ai-hint={getImageHint()}
         />
       </CardHeader>
       <CardContent className="flex-grow">

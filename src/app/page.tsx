@@ -71,7 +71,7 @@ export default function LandingPage() {
             width={800} 
             height={400} 
             className="mx-auto rounded-lg shadow-xl"
-            data-ai-hint="calm abstract" 
+            data-ai-hint="calm peaceful" 
           />
         </section>
 
