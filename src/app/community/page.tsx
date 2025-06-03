@@ -46,8 +46,14 @@ export default function CommunityPage() {
       <AppShell>
         <div className="space-y-8">
           <section className="relative bg-card p-6 sm:p-10 rounded-xl shadow-lg overflow-hidden">
-            <div className="absolute inset-0 opacity-10">
-                <Image src="https://placehold.co/1200x300.png" data-ai-hint="community connection" alt="Abstract background" layout="fill" objectFit="cover" />
+            <div className="absolute inset-0">
+                <Image 
+                  src="https://firebasestudio.googleapis.com/v0/b/studiopaired-prod.appspot.com/o/gemini%2Fpair%2Fdev%2Fworkspace%2Funderstanding-the-request%2Fsrc%2Fassets%2Fcommunity_hub_banner.png?alt=media&token=686e996f-98a1-40d3-8f72-58741a69a456" 
+                  data-ai-hint="support group" 
+                  alt="Illustration of four diverse individuals in a supportive group discussion" 
+                  layout="fill" 
+                  objectFit="cover" 
+                />
             </div>
             <div className="relative z-10">
                 <div className="flex items-center mb-4">
