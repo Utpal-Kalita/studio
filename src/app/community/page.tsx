@@ -45,14 +45,13 @@ export default function CommunityPage() {
       <AppShell>
         <div className="space-y-8">
           <section className="relative bg-card p-6 sm:p-10 rounded-xl shadow-lg overflow-hidden">
-            <div className="absolute inset-0 z-0"> {/* Added z-0 here */}
+            <div className="absolute inset-0 opacity-10">
                 <Image
-                  src="https://firebasestudio.googleapis.com/v0/b/studiopaired-prod.appspot.com/o/gemini%2Fpair%2Fdev%2Fworkspace%2Funderstanding-the-request%2Fsrc%2Fassets%2Fcommunity_hub_banner.png?alt=media&token=686e996f-98a1-40d3-8f72-58741a69a456"
+                  src="https://placehold.co/1200x300.png"
                   data-ai-hint="support group"
-                  alt="Illustration of four diverse individuals in a supportive group discussion"
+                  alt="Abstract background"
                   layout="fill"
                   objectFit="cover"
-                  priority // Added priority to suggest eager loading for this important image
                 />
             </div>
             <div className="relative z-10"> {/* Ensures text content is on top */}
