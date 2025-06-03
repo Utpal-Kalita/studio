@@ -5,14 +5,13 @@
 import AuthGuard from "@/components/auth/AuthGuard";
 import AppShell from "@/components/layout/AppShell";
 import CommunityCard from "@/components/community/CommunityCard";
-import { db } from "@/lib/firebase"; 
+import { db } from "@/lib/firebase";
 import { useEffect, useState } from "react";
 import { Loader2, Users } from "lucide-react";
 import type { Community } from "@/components/community/CommunityCard";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Image from "next/image";
-// Removed firestore import, using mock db
+import Image from "next/image"; // Make sure Image is imported
 
 export default function CommunityPage() {
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -46,16 +45,17 @@ export default function CommunityPage() {
       <AppShell>
         <div className="space-y-8">
           <section className="relative bg-card p-6 sm:p-10 rounded-xl shadow-lg overflow-hidden">
-            <div className="absolute inset-0">
-                <Image 
-                  src="https://firebasestudio.googleapis.com/v0/b/studiopaired-prod.appspot.com/o/gemini%2Fpair%2Fdev%2Fworkspace%2Funderstanding-the-request%2Fsrc%2Fassets%2Fcommunity_hub_banner.png?alt=media&token=686e996f-98a1-40d3-8f72-58741a69a456" 
-                  data-ai-hint="support group" 
-                  alt="Illustration of four diverse individuals in a supportive group discussion" 
-                  layout="fill" 
-                  objectFit="cover" 
+            <div className="absolute inset-0 z-0"> {/* Added z-0 here */}
+                <Image
+                  src="https://firebasestudio.googleapis.com/v0/b/studiopaired-prod.appspot.com/o/gemini%2Fpair%2Fdev%2Fworkspace%2Funderstanding-the-request%2Fsrc%2Fassets%2Fcommunity_hub_banner.png?alt=media&token=686e996f-98a1-40d3-8f72-58741a69a456"
+                  data-ai-hint="support group"
+                  alt="Illustration of four diverse individuals in a supportive group discussion"
+                  layout="fill"
+                  objectFit="cover"
+                  priority // Added priority to suggest eager loading for this important image
                 />
             </div>
-            <div className="relative z-10">
+            <div className="relative z-10"> {/* Ensures text content is on top */}
                 <div className="flex items-center mb-4">
                     <Users className="h-10 w-10 text-primary mr-3" />
                     <h1 className="font-headline text-3xl sm:text-4xl font-semibold text-foreground">Community Hub</h1>
